@@ -1,0 +1,46 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+  <title>نظام الطالب الذكي — اللغة العربية 12 علمي</title>
+  <meta name="description" content="نظام تعلم تفاعلي — اللغة العربية، الصف الثاني عشر العلمي، قطر — إعداد المعلم عبدالله البرغوثي" />
+  <!-- ملاحظة: لا يعتمد النظام على أي خط أو خدمة خارجية عبر الإنترنت — يعمل كاملًا دون اتصال -->
+  <link rel="stylesheet" href="css/style.css" />
+</head>
+<body>
+
+  <header class="app-header">
+    <button id="back-btn" class="icon-btn hidden" aria-label="رجوع" title="رجوع">→</button>
+    <h2 id="header-title">نظام الطالب الذكي</h2>
+    <span id="streak-chip" class="chip">🔥 0 يوم</span>
+    <span id="xp-chip" class="chip">⭐ 0 XP</span>
+  </header>
+
+  <main id="app-main" role="main" aria-live="polite"></main>
+
+  <!-- ==================== ترتيب تحميل السكربتات مهم ====================
+       1) data-core.js يهيّئ ARABIC12_DATA فارغة
+       2) كل ملف في js/lessons/ يضيف درسًا واحدًا (بترتيب أسابيع الفصل)
+       3) بقية المحركات، ثم app.js أخيرًا
+  ==================================================================== -->
+  <script src="js/data-core.js"></script>
+  <script src="js/lessons/01-tashbih-istiara.js"></script>
+  <script src="js/lessons/02-noor-ala-noor.js"></script>
+  <script src="js/lessons/03-khitab-ameer.js"></script>
+  <script src="js/lessons/04-afaal-muqaraba.js"></script>
+  <script src="js/lessons/05-maqal-niqashi.js"></script>
+  <script src="js/lessons/06-madrasat-ihya.js"></script>
+  <script src="js/lessons/07-ghurba-hanin.js"></script>
+  <script src="js/lessons/08-maqal-tafsiri.js"></script>
+  <script src="js/lessons/09-madrasa-romansiya.js"></script>
+  <script src="js/lessons/10-khubz-murr.js"></script>
+  <script src="js/lessons/11-shart-jazima.js"></script>
+  <script src="js/lessons/12-sada-hayat.js"></script>
+  <script src="js/lessons/13-shart-ghayr-jazima.js"></script>
+  <script src="js/progress.js"></script>
+  <script src="js/quiz.js"></script>
+  <script src="js/mindmap.js"></script>
+  <script src="js/app.js"></script>
+</body>
+</html>
