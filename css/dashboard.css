@@ -1,0 +1,285 @@
+/* ==========================================================================
+   dashboard.css — لوحة التحكم الجديدة (Glass / Gradient / Micro-interactions)
+   مبنية بـ CSS صرف فوق متغيرات النظام (--primary, --amber, --radius ...) —
+   دون Tailwind CDN حتى تبقى المنصة تعمل دون اتصال ودون تعارض مع التنسيق القائم.
+   كل القواعد مسبوقة بـ tk- أو مقيّدة بـ main.tk-dash / .app-header فقط.
+   ========================================================================== */
+
+/* ------------------------------ الشريط العلوي الزجاجي (عام لكل الشاشات) ------------------------------ */
+.app-header {
+  background: rgba(255, 255, 255, 0.72);
+  -webkit-backdrop-filter: saturate(180%) blur(18px);
+  backdrop-filter: saturate(180%) blur(18px);
+  border-bottom: 1px solid rgba(255, 255, 255, 0.75);
+  box-shadow: 0 1px 0 rgba(15, 23, 42, 0.05);
+  padding: 10px max(16px, calc((100vw - 1200px) / 2 + 16px));
+  gap: 10px;
+}
+.app-header h2 { font-size: 1.02rem; line-height: 1.25; min-width: 0; }
+.app-header h2 small { display: block; font-size: 0.68rem; font-weight: 500; color: var(--text-muted); }
+.app-header h2 .tk-brand-name { display: block; font-size: 1.3rem; font-weight: 900; letter-spacing: -0.2px; line-height: 1.1; }
+.app-header.has-extra h2 { flex: 0 0 auto; }
+.tk-brand-mark {
+  flex: none; width: 40px; height: 40px; border-radius: 14px; display: grid; place-items: center;
+  background: linear-gradient(135deg, #5a50e0, #2c27a0); box-shadow: 0 6px 16px rgba(66, 59, 214, 0.3);
+  transition: transform .3s ease;
+}
+.tk-brand-mark:hover { transform: rotate(-6deg) scale(1.05); }
+.tk-brand-mark svg { width: 26px; height: 26px; }
+.header-extra { display: none; }
+.app-header.has-extra .header-extra { display: flex; align-items: center; gap: 10px; flex: 1; justify-content: center; min-width: 0; }
+.header-extra .tk-greet-desktop { display: none; }
+@media (min-width: 820px) { .header-extra .tk-greet-desktop { display: flex; } }
+.header-extra .tk-about-btn { margin-inline-start: auto; }
+@media (min-width: 820px) { .header-extra .tk-about-btn { margin-inline-start: 0; } .app-header.has-extra .header-extra { justify-content: space-between; } }
+
+/* شارة الإنجاز: شريط واحد (أيام + نقاط) */
+.tk-badges { display: flex; align-items: center; gap: 6px; background: linear-gradient(270deg, #fef6e7, #fff1e0); border: 1px solid #f0d9ad; border-radius: 999px; padding: 4px; padding-inline-start: 12px; box-shadow: var(--shadow); }
+.app-header .chip { display: inline-flex; align-items: center; gap: 5px; font-size: 0.85rem; padding: 5px 10px; }
+.app-header #streak-chip.chip { background: transparent; color: #ea580c; padding-inline: 2px 4px; }
+.app-header #xp-chip.chip { background: #fff; color: var(--amber-dark); box-shadow: var(--shadow); }
+.chip svg { width: 16px; height: 16px; flex: none; }
+#streak-chip svg { animation: tkd-flame 1.8s ease-in-out infinite; transform-origin: 50% 90%; fill: rgba(251, 146, 60, 0.3); }
+#xp-chip svg { fill: #f6b93b; color: #e0a021; }
+@keyframes tkd-flame { 0%,100% { transform: rotate(-3deg) scale(1); } 50% { transform: rotate(3deg) scale(1.08); } }
+.tk-ico { width: 1em; height: 1em; fill: none; stroke: currentColor; stroke-width: 1.8; stroke-linecap: round; stroke-linejoin: round; flex: none; }
+
+/* ------------------------------ الصفحة الرئيسية ------------------------------ */
+main.tk-dash { max-width: 1200px; padding: 20px 16px 56px; }
+@media (min-width: 640px) { main.tk-dash { padding: 28px 24px 64px; } }
+.tkd > * + * { margin-top: 28px; }
+@media (min-width: 640px) { .tkd > * + * { margin-top: 40px; } }
+
+.tkd-reveal { opacity: 0; }
+.tkd-reveal.in { animation: tkd-reveal .65s cubic-bezier(.2,.8,.2,1) var(--d, 0ms) both; }
+@keyframes tkd-reveal { from { opacity: 0; translate: 0 18px; } to { opacity: 1; translate: 0 0; } }
+
+/* التحية والاسم */
+.tkd-greet { display: flex; align-items: center; gap: 8px; min-width: 0; }
+.tkd-greet--compact { background: rgba(255,255,255,.75); border: 1px solid rgba(255,255,255,.9); border-radius: 18px; padding: 10px 14px; box-shadow: var(--shadow); backdrop-filter: blur(10px); }
+@media (min-width: 820px) { .tkd-greet--compact { display: none; } }
+.tkd-greet-ico { width: 32px; height: 32px; border-radius: 50%; background: linear-gradient(135deg, #fdecc6, #f9dc9c); color: #b97e18; display: grid; place-items: center; flex: none; }
+.tkd-greet-ico .tk-ico { width: 16px; height: 16px; stroke-width: 2; }
+.tkd-greet-text { font-size: 0.88rem; color: var(--text-muted); font-weight: 500; white-space: nowrap; }
+.tkd-name-btn { display: inline-flex; align-items: center; gap: 6px; border: 1px dashed #cbd5e1; background: transparent; border-radius: 999px; padding: 4px 11px; font: inherit; font-size: 0.88rem; font-weight: 800; color: var(--text-muted); transition: all .15s ease; }
+.tkd-name-btn.has-name { border-color: transparent; color: var(--text); }
+.tkd-name-btn:hover { border-color: var(--primary); background: var(--primary-light); color: var(--primary-dark); }
+.tkd-name-btn span { max-width: 9rem; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.tkd-name-btn .tk-ico { width: 14px; height: 14px; color: #94a3b8; }
+.tkd-name-input { width: 8.5rem; border: 0; border-bottom: 2px solid var(--primary); background: transparent; padding: 3px 4px; font: inherit; font-size: 0.9rem; font-weight: 800; color: var(--text); }
+.tkd-name-input:focus { outline: none; border-bottom-color: var(--primary-dark); }
+.tkd-name-save { width: 32px; height: 32px; border-radius: 50%; border: 0; background: var(--primary); color: #fff; display: grid; place-items: center; box-shadow: var(--shadow); }
+.tkd-name-save .tk-ico { width: 16px; height: 16px; stroke-width: 2.6; }
+
+.tk-about-btn { display: inline-flex; align-items: center; gap: 8px; height: 40px; padding: 0 14px; border-radius: 999px; border: 1px solid var(--border); background: rgba(255,255,255,.85); font: inherit; font-size: 0.85rem; font-weight: 800; color: #334155; box-shadow: var(--shadow); transition: all .15s ease; white-space: nowrap; }
+.tk-about-btn:hover { border-color: #bfbaf7; background: var(--primary-light); color: var(--primary-dark); }
+.tk-about-btn .tk-ico { width: 18px; height: 18px; }
+.tk-about-btn .lbl-long, .tk-about-btn .lbl-mid { display: none; }
+@media (min-width: 640px) { .tk-about-btn .lbl-mid { display: inline; } }
+@media (min-width: 1100px) { .tk-about-btn .lbl-mid { display: none; } .tk-about-btn .lbl-long { display: inline; } }
+@media (max-width: 639px) { .tk-about-btn { padding: 0; width: 40px; justify-content: center; } }
+
+/* ---------- Hero ---------- */
+.tkd-hero {
+  position: relative; overflow: hidden; color: #fff; border-radius: 32px;
+  background: linear-gradient(135deg, #423bd6 0%, #7c3aed 52%, #7e22ce 100%);
+  padding: 20px; box-shadow: 0 30px 80px -30px rgba(66, 59, 214, .55);
+}
+@media (min-width: 640px) { .tkd-hero { padding: 32px; } }
+@media (min-width: 1024px) { .tkd-hero { padding: 40px; } }
+.tkd-hero-deco { position: absolute; inset: 0; pointer-events: none; }
+.tkd-hero-dots { position: absolute; inset: 0; opacity: .12; background-image: radial-gradient(circle at 1px 1px, #fff 1px, transparent 0); background-size: 22px 22px; }
+.tkd-orb { position: absolute; border-radius: 50%; filter: blur(60px); }
+.tkd-orb-a { top: -96px; inset-inline-start: -80px; width: 288px; height: 288px; background: rgba(232,121,249,.3); animation: tkd-float 7s ease-in-out infinite; }
+.tkd-orb-b { bottom: -112px; inset-inline-end: 40px; width: 320px; height: 320px; background: rgba(165,180,252,.3); animation: tkd-float 10s ease-in-out infinite reverse; }
+@keyframes tkd-float { 0%,100% { transform: translateY(0); } 50% { transform: translateY(-10px); } }
+.tkd-spark { position: absolute; color: #fcd34d; width: 20px; height: 20px; fill: currentColor; animation: tkd-twinkle 3.2s ease-in-out infinite; }
+@keyframes tkd-twinkle { 0%,100% { opacity: .25; transform: scale(.8); } 50% { opacity: 1; transform: scale(1.15); } }
+.tkd-hero-grid { position: relative; display: grid; gap: 24px; }
+@media (min-width: 1024px) { .tkd-hero-grid { grid-template-columns: 3fr 2fr; gap: 32px; } }
+.tkd-hero-main { display: flex; flex-direction: column; justify-content: space-between; gap: 24px; min-width: 0; }
+.tkd-pill { display: inline-flex; align-items: center; gap: 8px; border: 1px solid rgba(255,255,255,.25); background: rgba(255,255,255,.1); border-radius: 999px; padding: 5px 13px; font-size: 0.78rem; font-weight: 700; backdrop-filter: blur(8px); }
+.tkd-pill .tk-ico { width: 16px; height: 16px; color: #fcd34d; }
+.tkd-hero h1 { margin: 16px 0 0; font-size: 2.4rem; font-weight: 900; line-height: 1.15; letter-spacing: -0.5px; color: #fff; text-align: start; }
+@media (min-width: 640px) { .tkd-hero h1 { font-size: 3rem; } }
+@media (min-width: 1024px) { .tkd-hero h1 { font-size: 3.75rem; } }
+.tkd-hero h1 span { display: block; margin-top: 4px; font-size: 1.4rem; font-weight: 800; background: linear-gradient(270deg, #fde68a, #fcd34d, #e8b04a); -webkit-background-clip: text; background-clip: text; color: transparent; }
+@media (min-width: 640px) { .tkd-hero h1 span { font-size: 1.85rem; } }
+@media (min-width: 1024px) { .tkd-hero h1 span { font-size: 2.2rem; } }
+.tkd-teacher { margin: 16px 0 0; display: flex; align-items: center; gap: 12px; font-size: 0.9rem; color: #e0e7ff; text-align: start; }
+.tkd-teacher strong { color: #fff; font-weight: 800; }
+.tkd-teacher .av { width: 36px; height: 36px; border-radius: 50%; background: rgba(255,255,255,.15); box-shadow: inset 0 0 0 1px rgba(255,255,255,.3); display: grid; place-items: center; font-weight: 800; font-size: 0.85rem; flex: none; }
+.tkd-teacher .sep { opacity: .5; margin: 0 8px; }
+
+.tkd-lesson { border: 1px solid rgba(255,255,255,.25); background: rgba(255,255,255,.1); border-radius: 24px; padding: 16px; backdrop-filter: blur(14px); box-shadow: 0 10px 24px rgba(0,0,0,.06); }
+@media (min-width: 640px) { .tkd-lesson { padding: 20px; } }
+.tkd-lesson-row { display: flex; flex-wrap: wrap; align-items: center; gap: 12px; }
+.tkd-lesson-ico { width: 48px; height: 48px; border-radius: 16px; background: #fff; color: var(--primary); display: grid; place-items: center; box-shadow: 0 6px 14px rgba(0,0,0,.12); flex: none; }
+.tkd-lesson-ico .tk-ico { width: 24px; height: 24px; }
+.tkd-lesson-txt { flex: 1; min-width: 10rem; text-align: start; }
+.tkd-lesson-txt small { display: block; font-size: 0.74rem; font-weight: 700; color: #e0e7ff; }
+.tkd-lesson-txt b { display: block; font-size: 1.05rem; font-weight: 800; line-height: 1.4; }
+.tkd-switch { display: inline-flex; align-items: center; gap: 8px; height: 40px; padding: 0 16px; border: 0; border-radius: 999px; background: rgba(255,255,255,.95); color: var(--primary-dark); font: inherit; font-size: 0.85rem; font-weight: 800; box-shadow: var(--shadow); transition: transform .2s ease, box-shadow .2s ease; }
+.tkd-switch:hover { transform: translateY(-2px); background: #fff; box-shadow: 0 8px 18px rgba(0,0,0,.15); }
+.tkd-switch .tk-ico { width: 16px; height: 16px; stroke-width: 2.2; }
+.tkd-bar-head { display: flex; justify-content: space-between; align-items: center; margin: 16px 0 6px; font-size: 0.74rem; font-weight: 700; color: #e0e7ff; }
+.tkd-bar-head b { font-size: 0.88rem; font-weight: 800; color: #fff; }
+.tkd-bar { height: 10px; border-radius: 999px; background: rgba(0,0,0,.2); overflow: hidden; }
+.tkd-bar > i { display: block; height: 100%; width: 0; border-radius: 999px; background: linear-gradient(270deg, #fcd34d, #d99a2b); box-shadow: 0 0 12px rgba(251,191,36,.7); transition: width 1s ease-out; }
+
+/* ---------- التحدي اليومي ---------- */
+.tkd-quest { position: relative; height: 100%; display: flex; flex-direction: column; border: 1px solid rgba(255,255,255,.3); background: linear-gradient(180deg, rgba(255,255,255,.2), rgba(255,255,255,.07)); border-radius: 24px; padding: 20px; backdrop-filter: blur(20px); box-shadow: 0 20px 40px rgba(0,0,0,.1); }
+@media (min-width: 640px) { .tkd-quest { padding: 24px; } }
+.tkd-quest-head { display: flex; align-items: flex-start; justify-content: space-between; gap: 12px; }
+.tkd-quest-title { display: flex; align-items: center; gap: 12px; text-align: start; }
+.tkd-quest-ico { width: 48px; height: 48px; border-radius: 16px; background: linear-gradient(135deg, #fcd34d, #d99a2b); color: #451a03; display: grid; place-items: center; box-shadow: 0 8px 18px rgba(217,154,43,.35); flex: none; }
+.tkd-quest-ico .tk-ico { width: 24px; height: 24px; stroke-width: 2; }
+.tkd-quest h2 { margin: 0; font-size: 1.1rem; font-weight: 800; line-height: 1.25; color: #fff; }
+.tkd-quest p { margin: 2px 0 0; font-size: 0.74rem; font-weight: 500; color: #e0e7ff; }
+.tkd-xp { display: inline-flex; align-items: center; gap: 4px; background: rgba(252,211,77,.95); color: #451a03; border-radius: 999px; padding: 4px 10px; font-size: 0.74rem; font-weight: 800; box-shadow: var(--shadow); flex: none; }
+.tkd-xp .tk-ico { width: 14px; height: 14px; fill: currentColor; stroke-width: 1.5; }
+.tkd-quest .tkd-cd-label { display: flex; align-items: center; gap: 6px; margin: 20px 0 8px; font-size: 0.74rem; font-weight: 700; color: #e0e7ff; }
+.tkd-cd-label .tk-ico { width: 16px; height: 16px; stroke-width: 2; }
+.tkd-cd { display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; text-align: center; direction: ltr; }
+.tkd-cd > div { background: rgba(0,0,0,.2); border-radius: 16px; padding: 10px 0; box-shadow: inset 0 0 0 1px rgba(255,255,255,.1); }
+.tkd-cd b { display: block; font-size: 1.7rem; font-weight: 900; line-height: 1; font-variant-numeric: tabular-nums; }
+.tkd-cd small { display: block; margin-top: 4px; font-size: 0.62rem; font-weight: 700; color: #c7d2fe; direction: rtl; }
+.tkd-week { display: flex; justify-content: space-between; gap: 4px; margin-top: 20px; }
+.tkd-week > div { flex: 1; display: flex; flex-direction: column; align-items: center; gap: 6px; }
+.tkd-day { width: 32px; height: 32px; border-radius: 50%; display: grid; place-items: center; background: rgba(255,255,255,.1); color: #c7d2fe; }
+.tkd-day.on { background: #fcd34d; color: #451a03; box-shadow: 0 6px 12px rgba(217,154,43,.35); }
+.tkd-day.today:not(.on) { background: rgba(255,255,255,.2); color: #fff; box-shadow: 0 0 0 2px rgba(252,211,77,.8); }
+.tkd-day .tk-ico { width: 16px; height: 16px; stroke-width: 3; }
+.tkd-week small { font-size: 0.62rem; font-weight: 700; color: #c7d2fe; }
+.tkd-week .today + small, .tkd-week small.today { color: #fff; }
+.tkd-cta { margin-top: 20px; display: inline-flex; align-items: center; justify-content: center; gap: 8px; width: 100%; border: 0; border-radius: 16px; padding: 14px 20px; font: inherit; font-size: 1rem; font-weight: 900; color: #451a03; background: linear-gradient(270deg, #fcd34d, #fcd34d 40%, #e8b04a); box-shadow: 0 10px 22px rgba(217,154,43,.35); transition: transform .3s ease, box-shadow .3s ease; animation: tkd-ring 2.2s ease-out infinite; }
+.tkd-cta.done { animation: none; }
+.tkd-cta:hover { transform: translateY(-2px); box-shadow: 0 16px 30px rgba(217,154,43,.45); }
+.tkd-cta .tk-ico { width: 20px; height: 20px; fill: currentColor; stroke-width: 1.5; transition: transform .2s; }
+.tkd-cta:hover .tk-ico { transform: scale(1.12); }
+@media (min-width: 1024px) { .tkd-cta { margin-top: auto; } .tkd-week { margin-bottom: 20px; } }
+@keyframes tkd-ring { 0% { box-shadow: 0 0 0 0 rgba(251,191,36,.55), 0 10px 22px rgba(217,154,43,.35); } 70% { box-shadow: 0 0 0 14px rgba(251,191,36,0), 0 10px 22px rgba(217,154,43,.35); } 100% { box-shadow: 0 0 0 0 rgba(251,191,36,0), 0 10px 22px rgba(217,154,43,.35); } }
+
+/* ---------- عناوين الأقسام + البطاقات ---------- */
+.tkd-sec-head { display: flex; align-items: center; gap: 12px; margin-bottom: 20px; }
+.tkd-sec-chip { width: 40px; height: 40px; border-radius: 12px; display: grid; place-items: center; color: #fff; flex: none; box-shadow: 0 8px 16px var(--sh, rgba(66,59,214,.3)); background: var(--bg, var(--primary)); }
+.tkd-sec-chip .tk-ico { width: 20px; height: 20px; stroke-width: 2; }
+.tkd-sec-head h2 { margin: 0; font-size: 1.3rem; font-weight: 900; color: var(--text); text-align: start; }
+@media (min-width: 640px) { .tkd-sec-head h2 { font-size: 1.5rem; } }
+.tkd-sec-head p { margin: 0; font-size: 0.78rem; color: var(--text-muted); text-align: start; }
+.tkd-sec-line { flex: 1; height: 1px; background: linear-gradient(270deg, var(--ln, #c7d2fe), transparent); display: none; }
+@media (min-width: 640px) { .tkd-sec-line { display: block; } }
+.tkd-sec--indigo { --bg: #4f46e5; --sh: rgba(79,70,229,.3); --ln: #c7d2fe; }
+.tkd-sec--emerald { --bg: #059669; --sh: rgba(5,150,105,.3); --ln: #a7f3d0; }
+.tkd-sec--fuchsia { --bg: #c026d3; --sh: rgba(192,38,211,.3); --ln: #f5d0fe; }
+.tkd-sec--amber { --bg: #f59e0b; --sh: rgba(245,158,11,.3); --ln: #fde68a; }
+
+.tkd-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 12px; }
+@media (min-width: 640px) { .tkd-grid { gap: 16px; } }
+@media (min-width: 1024px) { .tkd-grid--3 { grid-template-columns: repeat(3, 1fr); } .tkd-grid--4 { grid-template-columns: repeat(4, 1fr); } }
+.tkd-split { display: grid; gap: 40px; }
+@media (min-width: 1024px) { .tkd-split { grid-template-columns: 2fr 1fr; gap: 24px; } }
+.tkd-split > section { display: flex; flex-direction: column; }
+.tkd-split > section > .tkd-grid, .tkd-split > section > .tkd-pcard { flex: 1; }
+
+.tkd-card {
+  --c: #4f46e5; --c-bg: #eef2ff; --c-ring: #e0e7ff; --c-glow: rgba(99,102,241,.25); --c-text: #4338ca;
+  position: relative; overflow: hidden; display: flex; flex-direction: column; gap: 14px; text-align: start; font: inherit; color: inherit;
+  border: 1px solid rgba(226,232,240,.8); border-radius: 24px; background: rgba(255,255,255,.82); padding: 16px;
+  box-shadow: var(--shadow); backdrop-filter: blur(8px); cursor: pointer;
+  transition: transform .3s ease, box-shadow .3s ease, border-color .3s ease, background .3s ease;
+}
+@media (min-width: 640px) { .tkd-card { padding: 20px; } }
+.tkd-card:hover { transform: translateY(-6px); background: #fff; border-color: var(--c-ring); box-shadow: 0 2px 4px rgba(15,23,42,.04), 0 24px 48px -16px var(--c-glow); }
+.tkd-card:active { transform: translateY(-2px) scale(.99); }
+.tkd-card:focus-visible, .tkd-elite:focus-visible, .tkd-cta:focus-visible, .tkd-switch:focus-visible, .tk-about-btn:focus-visible, .tkd-name-btn:focus-visible { outline: 2px solid var(--primary); outline-offset: 2px; }
+.tkd-card::before { content: ""; position: absolute; top: -56px; inset-inline-start: -56px; width: 144px; height: 144px; border-radius: 50%; background: var(--c-glow); filter: blur(30px); opacity: 0; transition: opacity .5s; pointer-events: none; }
+.tkd-card:hover::before { opacity: 1; }
+.tkd-card > * { position: relative; }
+.tkd-card-top { display: flex; align-items: flex-start; justify-content: space-between; gap: 10px; }
+.tkd-ico { width: 40px; height: 40px; border-radius: 16px; display: grid; place-items: center; background: var(--c-bg); color: var(--c); box-shadow: inset 0 0 0 1px var(--c-ring); transition: all .3s ease; flex: none; }
+@media (min-width: 640px) { .tkd-ico { width: 48px; height: 48px; } }
+.tkd-ico .tk-ico { width: 22px; height: 22px; }
+@media (min-width: 640px) { .tkd-ico .tk-ico { width: 24px; height: 24px; } }
+.tkd-card:hover .tkd-ico { background: var(--c); color: #fff; box-shadow: 0 8px 16px var(--c-glow); transform: scale(1.06); }
+.tkd-badge { border-radius: 999px; padding: 4px 9px; font-size: 0.66rem; font-weight: 800; background: var(--c-bg); color: var(--c-text); white-space: nowrap; }
+@media (min-width: 640px) { .tkd-badge { padding: 4px 10px; font-size: 0.7rem; } }
+.tkd-card h3 { margin: 0; font-size: 1rem; font-weight: 800; color: var(--text); }
+@media (min-width: 640px) { .tkd-card h3 { font-size: 1.1rem; } }
+.tkd-card p { margin: 4px 0 0; font-size: 0.75rem; line-height: 1.55; color: var(--text-muted); }
+@media (min-width: 640px) { .tkd-card p { font-size: 0.85rem; line-height: 1.7; } }
+.tkd-open { margin-top: auto; display: inline-flex; align-items: center; gap: 6px; font-size: 0.85rem; font-weight: 800; color: var(--c); }
+.tkd-open .tk-ico { width: 16px; height: 16px; stroke-width: 2.2; transition: transform .3s; }
+.tkd-card:hover .tkd-open .tk-ico { transform: translateX(-6px); }
+.tkd-t-indigo { --c: #4f46e5; --c-bg: #eef2ff; --c-ring: #e0e7ff; --c-glow: rgba(99,102,241,.28); --c-text: #4338ca; }
+.tkd-t-violet { --c: #7c3aed; --c-bg: #f5f3ff; --c-ring: #ede9fe; --c-glow: rgba(139,92,246,.28); --c-text: #6d28d9; }
+.tkd-t-sky { --c: #0284c7; --c-bg: #f0f9ff; --c-ring: #e0f2fe; --c-glow: rgba(14,165,233,.28); --c-text: #0369a1; }
+.tkd-t-cyan { --c: #0891b2; --c-bg: #ecfeff; --c-ring: #cffafe; --c-glow: rgba(6,182,212,.28); --c-text: #0e7490; }
+.tkd-t-blue { --c: #2563eb; --c-bg: #eff6ff; --c-ring: #dbeafe; --c-glow: rgba(59,130,246,.28); --c-text: #1d4ed8; }
+.tkd-t-purple { --c: #9333ea; --c-bg: #faf5ff; --c-ring: #f3e8ff; --c-glow: rgba(168,85,247,.28); --c-text: #7e22ce; }
+.tkd-t-emerald { --c: #059669; --c-bg: #ecfdf5; --c-ring: #d1fae5; --c-glow: rgba(16,185,129,.28); --c-text: #047857; }
+.tkd-t-teal { --c: #0d9488; --c-bg: #f0fdfa; --c-ring: #ccfbf1; --c-glow: rgba(20,184,166,.28); --c-text: #0f766e; }
+.tkd-t-green { --c: #16a34a; --c-bg: #f0fdf4; --c-ring: #dcfce7; --c-glow: rgba(34,197,94,.28); --c-text: #15803d; }
+.tkd-t-lime { --c: #65a30d; --c-bg: #f7fee7; --c-ring: #ecfccb; --c-glow: rgba(132,204,22,.28); --c-text: #4d7c0f; }
+.tkd-t-fuchsia { --c: #c026d3; --c-bg: #fdf4ff; --c-ring: #fae8ff; --c-glow: rgba(217,70,239,.28); --c-text: #a21caf; }
+.tkd-t-rose { --c: #e11d48; --c-bg: #fff1f2; --c-ring: #ffe4e6; --c-glow: rgba(244,63,94,.28); --c-text: #be123c; }
+
+/* بطاقة التقدّم */
+.tkd-pcard { --c: #d97706; --c-bg: #fffbeb; --c-ring: #fef3c7; --c-glow: rgba(245,158,11,.35); --c-text: #92400e; border-color: #fde9b8; background: linear-gradient(135deg, #fff, #fff 45%, #fffbeb); min-height: 15rem; }
+.tkd-pcard::before { top: -56px; inset-inline-start: auto; inset-inline-end: -56px; width: 160px; height: 160px; opacity: .6; background: rgba(252,211,77,.4); }
+.tkd-pcard:hover { border-color: #fcd34d; }
+.tkd-pcard .big { display: flex; align-items: flex-end; justify-content: space-between; margin-bottom: 8px; font-size: 0.74rem; font-weight: 700; color: var(--text-muted); }
+.tkd-pcard .big b { font-size: 2rem; font-weight: 900; line-height: 1; color: var(--text); }
+.tkd-pcard .big b em { font-style: normal; font-size: 1.1rem; color: #d97706; }
+.tkd-pbar { height: 12px; border-radius: 999px; background: #fef3c7; overflow: hidden; }
+.tkd-pbar > i { display: block; height: 100%; width: 0; border-radius: 999px; background: linear-gradient(270deg, #fbbf24, #f97316); transition: width 1s ease-out; }
+.tkd-pfoot { display: flex; justify-content: space-between; align-items: center; margin-top: 12px; font-size: 0.74rem; font-weight: 700; color: var(--text-muted); }
+.tkd-pfoot b { color: var(--text); }
+.tkd-pfoot span:last-child { display: inline-flex; align-items: center; gap: 4px; color: #b45309; }
+.tkd-pfoot .tk-ico { width: 16px; height: 16px; stroke-width: 2.2; transition: transform .3s; }
+.tkd-card:hover .tkd-pfoot .tk-ico { transform: translateX(-6px); }
+
+/* ---------- Elite Mode (Dark Premium) ---------- */
+.tkd-elite { position: relative; display: block; width: 100%; overflow: hidden; text-align: start; font: inherit; border: 0; cursor: pointer; border-radius: 32px; padding: 24px; color: #fff;
+  background: linear-gradient(270deg, #020617, #1e1b4b, #020617);
+  box-shadow: 0 0 0 1px rgba(251,191,36,.28), 0 30px 80px -30px rgba(251,191,36,.35);
+  transition: box-shadow .5s ease, transform .3s ease; }
+@media (min-width: 640px) { .tkd-elite { padding: 32px; } }
+.tkd-elite:hover { transform: translateY(-3px); box-shadow: 0 0 0 1px rgba(251,191,36,.6), 0 40px 100px -30px rgba(251,191,36,.55); }
+.tkd-elite-deco { position: absolute; inset: 0; pointer-events: none; }
+.tkd-elite-deco .o1 { position: absolute; top: -80px; inset-inline-start: 40px; width: 256px; height: 256px; border-radius: 50%; background: rgba(245,158,11,.2); filter: blur(60px); transition: background .5s; }
+.tkd-elite:hover .o1 { background: rgba(251,191,36,.3); }
+.tkd-elite-deco .o2 { position: absolute; bottom: -96px; inset-inline-end: 96px; width: 256px; height: 256px; border-radius: 50%; background: rgba(124,58,237,.25); filter: blur(60px); }
+.tkd-elite-deco .gr { position: absolute; inset: 0; opacity: .07; background-image: linear-gradient(rgba(255,255,255,.9) 1px, transparent 1px), linear-gradient(90deg, rgba(255,255,255,.9) 1px, transparent 1px); background-size: 36px 36px; }
+.tkd-elite::after { content: ""; position: absolute; top: -20%; bottom: -20%; inset-inline-end: -40%; width: 30%; transform: skewX(20deg); background: linear-gradient(90deg, transparent, rgba(255,255,255,.18), transparent); transition: transform .9s ease; pointer-events: none; }
+.tkd-elite:hover::after { transform: skewX(20deg) translateX(-520%); }
+.tkd-elite-row { position: relative; display: flex; flex-direction: column; align-items: flex-start; gap: 20px; }
+@media (min-width: 640px) { .tkd-elite-row { flex-direction: row; align-items: center; } }
+.tkd-crown { width: 64px; height: 64px; border-radius: 20px; display: grid; place-items: center; flex: none; background: linear-gradient(135deg, #fde68a, #f6b93b 50%, #b97e18); color: #451a03; box-shadow: 0 0 30px rgba(251,191,36,.55); transition: transform .5s ease; }
+.tkd-elite:hover .tkd-crown { transform: rotate(6deg) scale(1.05); }
+.tkd-crown .tk-ico { width: 32px; height: 32px; fill: currentColor; stroke-width: 1.4; }
+.tkd-elite-txt { flex: 1; min-width: 0; }
+.tkd-elite-txt small { display: block; font-size: 0.74rem; font-weight: 800; letter-spacing: .25em; text-transform: uppercase; color: #fcd34d; }
+.tkd-elite-txt h2 { margin: 4px 0 0; font-size: 1.5rem; font-weight: 900; color: #fff; }
+@media (min-width: 640px) { .tkd-elite-txt h2 { font-size: 1.9rem; } }
+.tkd-elite-txt p { margin: 6px 0 0; font-size: 0.88rem; color: #cbd5e1; }
+.tkd-elite-btn { display: inline-flex; align-items: center; justify-content: center; gap: 8px; width: 100%; border-radius: 16px; padding: 14px 24px; font-size: 1rem; font-weight: 900; color: #451a03; background: linear-gradient(270deg, #fde68a, #e8b04a); box-shadow: 0 10px 22px rgba(217,154,43,.3); }
+@media (min-width: 640px) { .tkd-elite-btn { width: auto; } }
+.tkd-elite-btn .tk-ico { width: 20px; height: 20px; stroke-width: 2.4; transition: transform .3s; }
+.tkd-elite:hover .tkd-elite-btn .tk-ico { transform: translateX(-4px); }
+
+/* شريط «أكمل تدريبك» — يحافظ على الميزة الحالية بشكل متناسق مع اللوحة */
+.tkd-resume { display: flex; align-items: center; justify-content: space-between; gap: 12px; width: 100%; border: 0; border-radius: 20px; padding: 14px 18px; font: inherit; color: #451a03; text-align: start; cursor: pointer; background: linear-gradient(135deg, #fde68a, #f6b93b); box-shadow: 0 10px 24px rgba(217,154,43,.3); transition: transform .2s ease; }
+.tkd-resume:hover { transform: translateY(-2px); }
+.tkd-resume b { font-weight: 900; }
+.tkd-resume span { font-size: 0.85rem; font-weight: 700; }
+
+.tkd-footnote { text-align: center; font-size: 0.75rem; color: var(--text-muted); padding-top: 4px; }
+
+@media (prefers-reduced-motion: reduce) {
+  .tkd-reveal, .tkd-reveal.in { opacity: 1; animation: none; }
+  .tkd-orb, .tkd-spark, .tkd-cta, #streak-chip svg { animation: none !important; }
+  .tkd-card, .tkd-elite, .tk-brand-mark, .tkd-switch, .tkd-bar > i, .tkd-pbar > i { transition: none; }
+  .tkd-elite::after { display: none; }
+}
+@media print { main.tk-dash { display: none !important; } }

@@ -1,0 +1,145 @@
+/* ==========================================================================
+   features.css — تنسيق أقسام «الكتاب المدرسي» و«الخطة الفصلية» و«محاكاة الاختبار»
+   يعيد استخدام متغيرات النظام الحالي (--primary, --radius, --surface...) والأصناف
+   الموجودة (qz-card, qz-btn, bk-field, dash-card, hero)؛ لا يعدّل أي قاعدة قائمة.
+   ========================================================================== */
+
+/* ------------------------------ الإدارة المشتركة ------------------------------ */
+.lib-dl { margin: 0; display: grid; grid-template-columns: 1fr; gap: 8px; }
+.lib-dl > div { display: flex; gap: 10px; align-items: baseline; border-bottom: 1px dashed var(--border); padding-bottom: 6px; }
+.lib-dl dt { flex: 0 0 8.5rem; font-size: 0.82rem; font-weight: 700; color: var(--text-muted); }
+.lib-dl dd { margin: 0; font-size: 0.95rem; color: var(--text); min-width: 0; overflow-wrap: anywhere; }
+@media (max-width: 480px) { .lib-dl > div { flex-direction: column; gap: 2px; } .lib-dl dt { flex-basis: auto; } }
+
+/* ------------------------------ المكتبة (كتاب/خطة) ------------------------------ */
+.lib-tabs { display: flex; gap: 8px; flex-wrap: wrap; margin: 12px 0; }
+.lib-tab {
+  font: inherit; cursor: pointer; padding: 9px 16px; border-radius: var(--radius-pill);
+  border: 1.5px solid var(--border); background: var(--surface); color: var(--text); font-weight: 700; font-size: 0.9rem;
+}
+.lib-tab:hover { border-color: var(--primary); }
+.lib-tab.active { background: var(--text); color: #fff; border-color: var(--text); }
+.lib-tab-missing { color: var(--text-muted); }
+.lib-tab.active.lib-tab-missing { color: #fff; }
+.lib-tab-note { font-size: 0.72rem; font-weight: 600; opacity: 0.85; margin-inline-start: 4px; }
+.lib-missing { text-align: center; padding: 24px 16px; }
+.lib-missing-icon { font-size: 2.4rem; }
+.lib-missing h3 { margin: 6px 0; }
+.lib-meta { margin-bottom: 10px; }
+.lib-note { margin: 10px 0 0; font-size: 0.85rem; line-height: 1.7; }
+.lib-resume { background: var(--amber-light); color: var(--amber-dark); border-radius: var(--radius-sm); padding: 8px 12px; margin: 8px 0; font-size: 0.9rem; display: flex; align-items: center; gap: 8px; flex-wrap: wrap; }
+.lib-resume-btn { padding: 4px 10px; font-size: 0.8rem; }
+.lib-viewer { margin: 10px 0 16px; }
+.lib-admin { margin-top: 18px; border-style: dashed; }
+.lib-admin-form { display: flex; flex-direction: column; gap: 10px; }
+.lib-admin-form label { display: flex; flex-direction: column; gap: 4px; font-size: 0.85rem; font-weight: 700; color: var(--text-muted); }
+.lib-admin-info { font-size: 0.85rem; line-height: 1.8; overflow-wrap: anywhere; }
+.lib-admin-info code { direction: ltr; unicode-bidi: embed; font-size: 0.75rem; word-break: break-all; }
+.lib-admin-out { margin-top: 8px; }
+
+/* ------------------------------ عارض PDF ------------------------------ */
+.pv-root { border: 1px solid var(--border); border-radius: var(--radius); background: var(--surface); box-shadow: var(--shadow); overflow: hidden; }
+.pv-bar { display: flex; align-items: center; gap: 6px; padding: 8px 10px; background: var(--surface-2); border-bottom: 1px solid var(--border); flex-wrap: wrap; position: sticky; top: 0; z-index: 3; }
+.pv-btn {
+  font: inherit; cursor: pointer; min-width: 38px; height: 38px; padding: 0 10px; border-radius: var(--radius-sm);
+  border: 1px solid var(--border); background: #fff; color: var(--text); font-size: 1.1rem; font-weight: 800; line-height: 1;
+  display: inline-flex; align-items: center; justify-content: center; text-decoration: none;
+}
+.pv-btn:hover:not(:disabled) { border-color: var(--primary); color: var(--primary-dark); }
+.pv-btn:disabled { opacity: 0.4; cursor: default; }
+.pv-btn-text { font-size: 0.82rem; font-weight: 700; }
+.pv-pageinfo { display: inline-flex; align-items: center; gap: 4px; font-size: 0.9rem; direction: rtl; }
+.pv-page-input { width: 4.2rem; height: 38px; text-align: center; border: 1px solid var(--border); border-radius: var(--radius-sm); font: inherit; background: #fff; color: var(--text); }
+.pv-of { color: var(--text-muted); }
+.pv-zoomval { min-width: 3.2rem; text-align: center; font-size: 0.85rem; color: var(--text-muted); }
+.pv-sep { width: 1px; height: 22px; background: var(--border); margin: 0 2px; }
+.pv-flex { flex: 1; }
+.pv-stage {
+  position: relative; overflow: auto; background: #e9eaf1; max-height: 78vh; min-height: 220px;
+  padding: 12px; text-align: center; -webkit-overflow-scrolling: touch; outline: none;
+}
+.pv-stage:focus-visible { box-shadow: inset 0 0 0 2px var(--primary); }
+.pv-canvas-wrap { display: inline-block; max-width: none; }
+.pv-canvas { display: block; background: #fff; box-shadow: var(--shadow-md); margin: 0 auto; }
+.pv-status { padding: 24px 12px; color: var(--text-muted); font-size: 0.95rem; line-height: 1.8; }
+.pv-status-error { color: var(--red); background: var(--red-light); border-radius: var(--radius-sm); margin: 8px; }
+@media (max-width: 480px) {
+  .pv-stage { max-height: 72vh; padding: 6px; }
+  .pv-btn { min-width: 36px; height: 36px; }
+  .pv-bar { gap: 4px; padding: 6px; }
+}
+
+/* ------------------------------ محاكاة الاختبار ------------------------------ */
+.exam-disclaimer { margin: 10px 0; font-size: 0.9rem; }
+.exam-sections { border: 1px solid var(--border); border-radius: var(--radius-sm); padding: 8px 12px 10px; margin: 0 0 12px; }
+.exam-sections legend { font-size: 0.85rem; font-weight: 700; color: var(--text-muted); padding: 0 6px; }
+.exam-sec-list { display: flex; flex-direction: column; gap: 6px; }
+.exam-check { display: flex; align-items: flex-start; gap: 8px; font-size: 0.95rem; cursor: pointer; line-height: 1.6; }
+.exam-check input { width: 18px; height: 18px; margin-top: 3px; accent-color: var(--primary); flex: 0 0 auto; }
+.exam-count-wrap { display: flex; flex-direction: column; gap: 8px; }
+.exam-count-input { max-width: 9rem; }
+.exam-chips { display: flex; gap: 6px; flex-wrap: wrap; }
+.exam-chip { font: inherit; cursor: pointer; padding: 6px 14px; border-radius: var(--radius-pill); border: 1.5px solid var(--border); background: var(--surface); font-weight: 700; font-size: 0.85rem; color: var(--text); }
+.exam-chip:hover { border-color: var(--primary); background: var(--primary-light); }
+.exam-hint { font-size: 0.88rem; color: var(--text-muted); margin: 2px 0 10px; line-height: 1.7; }
+.exam-hint-warn { color: var(--red); background: var(--red-light); padding: 8px 10px; border-radius: var(--radius-sm); }
+.exam-answers-opt { margin: 10px 0; }
+.exam-notes { font-size: 0.82rem; line-height: 1.7; margin: 6px 0 8px; }
+.exam-error { background: var(--red-light); color: var(--red); border-radius: var(--radius-sm); padding: 10px 12px; margin: 8px 0; font-size: 0.9rem; }
+.exam-summary h3 { margin-top: 0; }
+.exam-seclist { margin: 0; padding: 0; list-style: none; }
+.exam-actions { flex-wrap: wrap; }
+.exam-status { min-height: 1.4em; margin: 8px 0; font-size: 0.9rem; }
+.exam-status-ok { color: var(--primary-dark); }
+.exam-status-bad { color: var(--red); }
+.exam-paper { margin-top: 10px; }
+.exam-block { background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius); padding: 12px 14px; margin-bottom: 10px; box-shadow: var(--shadow); }
+.exam-block-title { margin: 0 0 6px; font-size: 1rem; font-weight: 800; border-bottom: 2px solid var(--primary); padding-bottom: 6px; }
+.exam-block-sec { font-size: 0.8rem; margin-bottom: 4px; }
+.exam-passage-chip { display: inline-block; background: var(--surface-2); border-radius: var(--radius-pill); padding: 3px 10px; font-size: 0.8rem; color: var(--text-muted); margin-bottom: 6px; }
+.exam-qlist { margin: 6px 0 0; padding-inline-start: 1.6rem; }
+.exam-q { margin-bottom: 8px; line-height: 1.9; font-size: 0.92rem; overflow-wrap: anywhere; }
+.exam-q-line { white-space: pre-wrap; }
+.exam-q-opts { margin: 2px 0 0; padding-inline-start: 1rem; }
+.exam-q-letter { font-weight: 800; color: var(--primary-dark); }
+.exam-q-blank { color: var(--text-muted); letter-spacing: 2px; overflow: hidden; white-space: nowrap; }
+.exam-paper-full .exam-q { border-bottom: 1px dashed var(--border-soft); padding-bottom: 6px; }
+
+/* ------------------------------ ملفات الدروس / المراجعة (PDF) ------------------------------ */
+.lf-intro h3 { margin: 4px 0 2px; }
+.lf-intro p { margin: 0 0 10px; line-height: 1.8; font-size: 0.92rem; }
+.lf-list { display: grid; grid-template-columns: 1fr; gap: 10px; margin: 10px 0 14px; }
+@media (min-width: 760px) { .lf-list { grid-template-columns: 1fr 1fr; } }
+.lf-card {
+  position: relative; display: flex; flex-direction: column; gap: 10px;
+  background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius);
+  padding: 14px 14px 12px; padding-inline-start: 18px; box-shadow: var(--shadow); overflow: hidden;
+  transition: transform .15s ease, box-shadow .15s ease, border-color .15s ease;
+}
+.lf-card::before { content: ""; position: absolute; inset-block: 0; inset-inline-start: 0; width: 5px; background: var(--primary); }
+.lf-card.lf-ws::before { background: var(--amber, #d99a2b); }
+.lf-card:hover { transform: translateY(-2px); box-shadow: var(--shadow-md); border-color: var(--primary); }
+.lf-icon {
+  position: absolute; inset-block-start: 12px; inset-inline-end: 12px;
+  width: 40px; height: 40px; border-radius: 12px; display: flex; align-items: center; justify-content: center;
+  font-size: 1.3rem; background: var(--primary-light);
+}
+.lf-ws .lf-icon { background: var(--amber-light); }
+.lf-body { padding-inline-end: 50px; min-width: 0; }
+.lf-title { margin: 0 0 6px; font-size: 1rem; font-weight: 800; line-height: 1.5; overflow-wrap: anywhere; }
+.lf-meta { display: flex; flex-wrap: wrap; gap: 6px; }
+.lf-chip { font-size: 0.74rem; font-weight: 700; padding: 3px 10px; border-radius: var(--radius-pill); background: var(--surface-2); color: var(--text); border: 1px solid var(--border); }
+.lf-chip-soft { background: transparent; color: var(--text-muted); font-weight: 600; }
+.lf-lesson { margin-top: 8px; font-size: 0.82rem; color: var(--primary-dark); }
+.lf-lesson-none { color: var(--text-muted); }
+.lf-actions { display: flex; gap: 8px; flex-wrap: wrap; }
+.lf-btn { text-decoration: none; display: inline-flex; align-items: center; justify-content: center; gap: 6px; padding: 8px 16px; font-size: 0.88rem; }
+.lf-sub { margin: 18px 0 0; font-size: 0.95rem; color: var(--text-muted); }
+.lf-more { margin: 4px 0 8px; }
+.lf-note { font-size: 0.85rem; line-height: 1.7; margin: 10px 0; }
+.lf-bundle { display: flex; align-items: center; justify-content: space-between; gap: 12px; flex-wrap: wrap; margin: 4px 0 6px; }
+.lf-domain { display: flex; align-items: center; gap: 8px; }
+.lf-viewbar { display: flex; gap: 8px; flex-wrap: wrap; margin: 4px 0 8px; }
+.lf-viewer .pv-stage { max-height: 80vh; }
+@media (max-width: 480px) { .lf-actions .lf-btn { flex: 1 1 auto; } }
+@media (prefers-reduced-motion: reduce) { .lf-card { transition: none; } .lf-card:hover { transform: none; } }
