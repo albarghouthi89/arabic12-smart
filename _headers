@@ -1,0 +1,10 @@
+# ملفات المراجع الدراسية (الكتاب/الخطة): اسم الملف يحمل رقم النسخة، فلا خطر من نسخة قديمة مخزَّنة
+# عند الاستبدال (النسخة الجديدة = اسم جديد). التخزين الطويل يمنع إعادة تنزيل الكتاب في كل زيارة.
+/library/files/*
+  Cache-Control: public, max-age=31536000, immutable
+  Accept-Ranges: bytes
+/vendor/pdfjs/*
+  Cache-Control: public, max-age=31536000, immutable
+# السجل نفسه يجب أن يُعاد التحقق منه دائمًا كي يظهر الإصدار المعتمد الجديد فورًا
+/js/library/manifest.js
+  Cache-Control: no-cache

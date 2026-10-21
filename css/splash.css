@@ -1,0 +1,22 @@
+/* ==========================================================================
+   splash.css — شاشة الافتتاح «تمكّن» + شريط التحميل العلوي (إضافة جديدة)
+   نسخة مضمَّنة (inline) من القواعد الحرجة موجودة في index.html لتظهر فور فتح
+   الرابط قبل تحميل بقية الملفات؛ هذا الملف يحمل بقية التنسيق (الشريط/الدخول).
+   ========================================================================== */
+#top-loader { position: fixed; inset-block-start: 0; inset-inline: 0; height: 3px; z-index: 9998; pointer-events: none; opacity: 0; }
+#top-loader::before { content: ""; position: absolute; inset: 0; transform-origin: right center; transform: scaleX(0);
+  background: linear-gradient(90deg, #d99a2b, #423bd6); border-radius: 0 0 3px 3px; }
+#top-loader.run { opacity: 1; }
+#top-loader.run::before { transform: scaleX(.72); transition: transform .5s cubic-bezier(.2,.7,.2,1); }
+#top-loader.done { opacity: 0; transition: opacity .3s ease .12s; }
+#top-loader.done::before { transform: scaleX(1); transition: transform .18s ease-out; }
+
+/* دخول التطبيق بعد الافتتاح: ظهور ناعم كأنه ينبثق من الشعار */
+body.app-entering .app-header { animation: tk-drop .5s cubic-bezier(.2,.8,.2,1) both; }
+body.app-entering #app-main { animation: tk-rise .6s cubic-bezier(.2,.8,.2,1) .06s both; }
+@keyframes tk-drop { from { transform: translateY(-100%); opacity: 0; } to { transform: none; opacity: 1; } }
+@keyframes tk-rise { from { transform: translateY(14px); opacity: 0; } to { transform: none; opacity: 1; } }
+@media (prefers-reduced-motion: reduce) {
+  #top-loader.run::before, #top-loader.done::before { transition: none; }
+  body.app-entering .app-header, body.app-entering #app-main { animation: none; }
+}
