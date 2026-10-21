@@ -1,231 +1,228 @@
 // ============================================================================
-// auth.js — مصادقة حقيقية عبر Supabase Auth (Hashing + Sessions + RLS).
-// لا يوجد هنا أي تخزين لكلمات مرور — كل شيء يمرّ عبر GoTrue (نظام Supabase Auth).
-// نفس البنية المُختبَرة فعليًا في النسخة V2، مع إضافتين لهذه المرحلة التجارية:
-// getAccessStatus() و getTrialDaysRemaining() (انظر access.js أيضًا).
+// auth.js — حسابات الطلاب عبر Supabase Auth الرسمي (البريد الإلكتروني فقط).
+// لا تخزين لكلمات مرور ولا رموز هنا: كل شيء يمرّ عبر Supabase Auth، والجلسة
+// تحفظها المكتبة نفسها وتجدّدها تلقائيًا.
+//
+// كل دالة تُرجع أخطاء مُترجمة (AuthError.messageAr) بدل رسائل الخادم الخام.
 // ============================================================================
 const PlatformAuth = (function () {
-  // بريد اصطناعي داخلي لحسابات المدرسة فقط (نفس النطاق المُستخدم في V2 عمدًا،
-  // لأن الحسابات تعيش في نفس مشروع Supabase وقاعدة auth.users نفسها).
-  const SCHOOL_EMAIL_DOMAIN = "school.arabic12.local";
+  const RESEND_COOLDOWN_MS = 60 * 1000;   // يطابق حد Supabase الافتراضي لإعادة الإرسال
+  const COOLDOWN_KEY = "tamakkun_auth_cooldowns_v1";
+  const NAME_MAX = 40;
+  const PASSWORD_MIN = 8;
 
-  function db() {
-    if (!window.PLATFORM_DB) {
-      throw new Error("Supabase غير مُهيّأ — تحقق من js/platform/config.js");
+  function db() { return window.PLATFORM_DB; }
+  function isEnabled() { return !!window.PLATFORM_DB; }
+
+  // روابط البريد تعود إلى صفحة الموقع نفسها (بلا معاملات سابقة). إن فُتحت الصفحة
+  // من ملف محلي (origin = "null") نترك Supabase يستخدم Site URL بدل عنوان غير صالح.
+  function redirectUrl() {
+    return /^https?:$/.test(location.protocol) ? location.origin + location.pathname : undefined;
+  }
+
+  // ---------------------------------------------------------------- الأخطاء
+  const MESSAGES = {
+    invalid_credentials: "البريد الإلكتروني أو كلمة المرور غير صحيحة.",
+    email_not_confirmed: "لم يُفعَّل حسابك بعد. افتح رسالة التفعيل في بريدك، أو اطلب رسالة جديدة.",
+    weak_password: `كلمة المرور ضعيفة. استخدم ${PASSWORD_MIN} أحرف على الأقل، وامزج بين الحروف الإنجليزية والأرقام.`,
+    same_password: "كلمة المرور الجديدة مطابقة للقديمة. اختر كلمة مرور مختلفة.",
+    over_email_send_rate_limit: "أُرسلت رسائل كثيرة إلى هذا البريد مؤخرًا. انتظر قليلًا ثم حاول مجددًا.",
+    over_request_rate_limit: "محاولات كثيرة في وقت قصير. انتظر دقيقة ثم حاول مجددًا.",
+    email_address_invalid: "عنوان البريد الإلكتروني غير صالح.",
+    signup_disabled: "إنشاء الحسابات متوقف مؤقتًا. حاول لاحقًا.",
+    email_provider_disabled: "التسجيل بالبريد متوقف مؤقتًا. حاول لاحقًا.",
+    user_banned: "هذا الحساب موقوف. تواصل مع المعلم.",
+    session_not_found: "انتهت جلستك. سجّل الدخول مجددًا.",
+    reauthentication_needed: "لأسباب أمنية، سجّل الدخول مجددًا ثم أعد المحاولة.",
+    otp_expired: "انتهت صلاحية الرابط أو استُخدم من قبل.",
+    network: "تعذّر الاتصال بالخدمة. تحقق من الإنترنت ثم حاول مجددًا.",
+    cooldown: "انتظر قليلًا قبل طلب رسالة جديدة.",
+    unknown: "حدث خطأ غير متوقع. حاول مجددًا بعد قليل.",
+  };
+
+  class AuthError extends Error {
+    constructor(code, retryAfterSec) {
+      super(code);
+      this.code = code;
+      this.messageAr = MESSAGES[code] || MESSAGES.unknown;
+      this.retryAfterSec = retryAfterSec || 0;
     }
-    return window.PLATFORM_DB;
   }
 
-  // اسم المستخدم: أحرف إنجليزية/أرقام فقط (بلا مسافات أو عربية أو رموز) لأنه
-  // يُستخدم لبناء بريد داخلي صالح لحسابات المدرسة، ولأنه معرّف تسجيل الدخول
-  // لكل الحسابات.
-  function sanitizeUsername(raw) {
-    const cleaned = (raw || "").trim().toLowerCase().replace(/[^a-z0-9_]/g, "");
-    if (cleaned.length < 3) {
-      throw new Error("اسم المستخدم يجب أن يكون 3 أحرف إنجليزية/أرقام على الأقل، بدون مسافات أو حروف عربية أو رموز (مثال: ahmad_2010).");
-    }
-    return cleaned;
+  // يحوّل خطأ Supabase إلى رمز معروف دون تمرير نص الخادم الخام للواجهة.
+  function normalize(err) {
+    if (err instanceof AuthError) return err;
+    if (!err) return new AuthError("unknown");
+    const name = err.name || "";
+    if (name === "AuthRetryableFetchError" || err.status === 0 || err instanceof TypeError) return new AuthError("network");
+    if (err.code && MESSAGES[err.code]) return new AuthError(err.code);
+    if (err.status === 429) return new AuthError("over_request_rate_limit");
+    if (err.code === "validation_failed" || err.code === "email_address_not_authorized") return new AuthError("email_address_invalid");
+    return new AuthError("unknown");
   }
 
-  // ------------------------------------------------------------------ signUp
-  async function signUpSchoolStudent({ username, fullName, password, schoolId }) {
-    const cleanUsername = sanitizeUsername(username);
-    const email = `${cleanUsername}@${SCHOOL_EMAIL_DOMAIN}`;
-    const { data, error } = await db().auth.signUp({
-      email,
-      password,
-      options: {
-        data: {
-          username: cleanUsername,
-          full_name: fullName,
-          role_code: "school_student",
-          account_type: "school",
-        },
-      },
-    });
-    if (error) throw error;
-    if (schoolId && data.user) {
-      await db().from("profiles").update({ school_id: schoolId }).eq("id", data.user.id);
-    }
-    return data;
-  }
-
-  async function signUpExternalStudent({ username, fullName, email, password }) {
-    const cleanUsername = sanitizeUsername(username);
-    const { data, error } = await db().auth.signUp({
-      email,
-      password,
-      options: {
-        data: {
-          username: cleanUsername,
-          full_name: fullName,
-          role_code: "external_student",
-          account_type: "external",
-        },
-      },
-    });
-    if (error) throw error;
-    return data;
-  }
-
-  // ------------------------------------------------------------------ signIn
-  async function signInWithUsername({ username, password }) {
-    const { data: email, error: lookupError } = await db().rpc("email_for_username", {
-      p_username: username.trim().toLowerCase(),
-    });
-    if (lookupError) throw lookupError;
-    if (!email) throw new Error("اسم المستخدم غير موجود");
-
-    const { data, error } = await db().auth.signInWithPassword({ email, password });
-    if (error) throw error;
-
-    await recordDeviceAndSession();
-    await logEvent("login", {});
-    await touchLastLogin();
-    return data;
-  }
-
-  async function signOut() {
-    await logEvent("logout", {});
-    await db().auth.signOut();
-  }
-
-  // -------------------------------------------------------------- profile
-  async function getSession() {
-    const { data } = await db().auth.getSession();
-    return data.session;
-  }
-
-  async function getCurrentProfile() {
-    const session = await getSession();
-    if (!session) return null;
-    const { data, error } = await db()
-      .from("profiles")
-      .select("*, schools(name_ar)")
-      .eq("id", session.user.id)
-      .single();
-    if (error) return null;
-    return data;
-  }
-
-  async function touchLastLogin() {
-    const session = await getSession();
-    if (!session) return;
-    await db().from("profiles").update({ last_login_at: new Date().toISOString() }).eq("id", session.user.id);
-  }
-
-  // -------------------------------------------------- حالة الوصول التجارية
-  // (المرحلة الثانية) — تُحسب دائمًا من قاعدة البيانات نفسها، لا من أي قيمة
-  // محفوظة في المتصفح. راجع migration_003_trial_and_launch.sql.
-  async function getAccessStatus(subjectSlug) {
-    const { data, error } = await db().rpc("get_access_status", {
-      p_subject_slug: subjectSlug || "arabic-12",
-    });
-    if (error) throw error;
-    return data; // 'STAFF' | 'SCHOOL_FREE' | 'SUBSCRIPTION_ACTIVE' | 'TRIAL_ACTIVE' | 'TRIAL_EXPIRED' | 'NO_ACCESS'
-  }
-
-  async function getTrialDaysRemaining() {
-    const { data, error } = await db().rpc("get_trial_days_remaining");
-    if (error) return null;
-    return data;
-  }
-
-  // ---------------------------------------------- إجبار تغيير كلمة المرور
-  async function needsPasswordChange() {
-    const profile = await getCurrentProfile();
-    return !!(profile && profile.must_change_password);
-  }
-
-  async function changePassword(newPassword) {
-    const { error: updateError } = await db().auth.updateUser({ password: newPassword });
-    if (updateError) throw updateError;
-
-    const session = await getSession();
-    await db().from("profiles").update({ must_change_password: false }).eq("id", session.user.id);
-  }
-
-  // --------------------------------------------------------- الأجهزة (حد جهازين)
-  function getOrCreateDeviceFingerprint() {
-    let fp = localStorage.getItem("platform_device_fp");
-    if (!fp) {
-      fp = "dev-" + Math.random().toString(36).slice(2) + "-" + Date.now().toString(36);
-      localStorage.setItem("platform_device_fp", fp);
-    }
-    return fp;
-  }
-
-  function detectDeviceType() {
-    const ua = navigator.userAgent || "";
-    if (/tablet|ipad/i.test(ua)) return "tablet";
-    if (/mobi|android|iphone/i.test(ua)) return "mobile";
-    return "desktop";
-  }
-
-  async function recordDeviceAndSession() {
+  async function call(fn) {
+    if (!isEnabled()) throw new AuthError("network");
     try {
-      const fingerprint = getOrCreateDeviceFingerprint();
-      const deviceType = detectDeviceType();
-      const deviceName = `${deviceType} — ${navigator.platform || "unknown"}`;
-      const { data, error } = await db().rpc("register_device", {
-        p_fingerprint: fingerprint,
-        p_device_name: deviceName,
-        p_device_type: deviceType,
-      });
+      const { data, error } = await fn();
       if (error) throw error;
-      if (data === "limit_reached") {
-        return { status: "limit_reached" };
-      }
-      return { status: "ok" };
+      return data;
     } catch (e) {
-      console.warn("[platform] تعذّر تسجيل الجهاز:", e.message);
-      return { status: "error" };
+      throw normalize(e);
     }
   }
 
-  async function listMyDevices() {
-    const session = await getSession();
-    if (!session) return [];
-    const { data } = await db()
-      .from("devices")
-      .select("*")
-      .eq("user_id", session.user.id)
-      .order("last_seen_at", { ascending: false });
-    return data || [];
+  // ------------------------------------------------------------- التحقق المحلي
+  function validateEmail(email) {
+    const v = (email || "").trim();
+    if (!v || v.length > 254 || !/^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/.test(v)) return "أدخل بريدًا إلكترونيًا صحيحًا، مثل: name@example.com";
+    return null;
+  }
+  function validatePassword(pw) {
+    if (!pw || pw.length < PASSWORD_MIN) return `كلمة المرور ${PASSWORD_MIN} أحرف على الأقل.`;
+    if (pw.length > 72) return "كلمة المرور طويلة جدًا (72 حرفًا كحد أقصى).";
+    // يطابق إعداد Supabase «Letters and digits» (حروف إنجليزية فقط)
+    if (!/[A-Za-z]/.test(pw) || !/[0-9]/.test(pw)) return "استخدم حروفًا إنجليزية وأرقامًا معًا في كلمة المرور.";
+    return null;
+  }
+  function cleanName(name) {
+    return (name || "").replace(/[\u0000-\u001F\u007F]/g, "").replace(/\s+/g, " ").trim();
+  }
+  function validateName(name) {
+    const v = cleanName(name);
+    if (v.length < 2) return "اكتب اسمك (حرفان على الأقل).";
+    if (v.length > NAME_MAX) return `الاسم ${NAME_MAX} حرفًا كحد أقصى.`;
+    return null;
   }
 
-  async function retireDevice(deviceId) {
-    await db().rpc("retire_device", { p_device_id: deviceId });
+  // ------------------------------------------------- مهلة إعادة الإرسال (لكل بريد)
+  // طبقة لطف في الواجهة فقط؛ الحماية الفعلية هي حدود Supabase على الخادم.
+  function readCooldowns() {
+    try { return JSON.parse(localStorage.getItem(COOLDOWN_KEY)) || {}; } catch (e) { return {}; }
+  }
+  function cooldownKey(kind, email) { return kind + ":" + (email || "").trim().toLowerCase(); }
+  function cooldownRemaining(kind, email) {
+    const until = readCooldowns()[cooldownKey(kind, email)] || 0;
+    return Math.max(0, Math.ceil((until - Date.now()) / 1000));
+  }
+  function startCooldown(kind, email) {
+    const all = readCooldowns();
+    const now = Date.now();
+    Object.keys(all).forEach(k => { if (all[k] < now) delete all[k]; });
+    all[cooldownKey(kind, email)] = now + RESEND_COOLDOWN_MS;
+    try { localStorage.setItem(COOLDOWN_KEY, JSON.stringify(all)); } catch (e) { /* ignore */ }
+  }
+  function guardCooldown(kind, email) {
+    const left = cooldownRemaining(kind, email);
+    if (left > 0) throw new AuthError("cooldown", left);
   }
 
-  // ------------------------------------------------------------------- log
-  async function logEvent(eventType, metadata) {
+  // ------------------------------------------------------------------- العمليات
+  // التسجيل: لا يعني أن الحساب مفعّل. needsConfirmation=true ما دام لا جلسة.
+  // لا نكشف إن كان البريد مسجّلًا من قبل (Supabase يُرجع نتيجة متطابقة عمدًا).
+  async function signUp({ displayName, email, password }) {
+    const data = await call(() => db().auth.signUp({
+      email: email.trim(),
+      password,
+      options: {
+        emailRedirectTo: redirectUrl(),
+        data: { display_name: cleanName(displayName).slice(0, NAME_MAX) },
+      },
+    }));
+    startCooldown("signup", email);
+    return { needsConfirmation: !data.session };
+  }
+
+  async function signIn({ email, password }) {
+    return call(() => db().auth.signInWithPassword({ email: email.trim(), password }));
+  }
+
+  async function resendConfirmation(email) {
+    guardCooldown("signup", email);
+    await call(() => db().auth.resend({ type: "signup", email: email.trim(), options: { emailRedirectTo: redirectUrl() } }));
+    startCooldown("signup", email);
+  }
+
+  async function requestPasswordReset(email) {
+    guardCooldown("recovery", email);
+    await call(() => db().auth.resetPasswordForEmail(email.trim(), { redirectTo: redirectUrl() }));
+    startCooldown("recovery", email);
+  }
+
+  async function updatePassword(newPassword) {
+    await call(() => db().auth.updateUser({ password: newPassword }));
+  }
+
+  // الخروج من هذا الجهاز: يُبطل رمز التجديد على الخادم ويحذف الجلسة المحلية.
+  // حتى لو فشل الاتصال تُحذف الجلسة المحلية، فلا يبقى الطالب «داخلًا» على الجهاز.
+  async function signOut() {
+    if (!isEnabled()) return;
     try {
-      const session = await getSession();
-      if (!session) return;
-      await db().from("activity_events").insert({
-        user_id: session.user.id,
-        event_type: eventType,
-        metadata: metadata || {},
-      });
+      const { error } = await db().auth.signOut({ scope: "local" });
+      if (error) throw error;
     } catch (e) {
-      /* لا نوقف تجربة الطالب بسبب فشل تسجيل حدث تحليلي */
+      try { await db().auth.signOut({ scope: "local" }); } catch (e2) { /* ignore */ }
     }
+  }
+
+  // الجلسة المحفوظة محليًا (سريعة، دون شبكة) — للعرض فقط.
+  async function getSession() {
+    if (!isEnabled()) return null;
+    try {
+      const { data } = await db().auth.getSession();
+      return data.session || null;
+    } catch (e) { return null; }
+  }
+
+  // تحقق من الخادم أن الجلسة ما زالت صالحة (لا نثق بالنسخة المحلية وحدها).
+  // يُرجع: user | null (جلسة مرفوضة) | undefined (تعذّر الاتصال، فلا نحكم).
+  async function verifyUser() {
+    if (!isEnabled()) return null;
+    try {
+      const { data, error } = await db().auth.getUser();
+      if (error) {
+        const n = normalize(error);
+        return n.code === "network" ? undefined : null;
+      }
+      return data.user || null;
+    } catch (e) { return undefined; }
+  }
+
+  // رابط تفعيل بقالب token_hash (إن عُدّل قالب البريد في Supabase لاحقًا).
+  async function verifyTokenHash(tokenHash, type) {
+    return call(() => db().auth.verifyOtp({ token_hash: tokenHash, type: type === "recovery" ? "recovery" : "email" }));
+  }
+
+  // ------------------------------------------------------------- ملف الطالب
+  async function getProfile(user) {
+    if (!user) return null;
+    const fallback = { id: user.id, display_name: cleanName((user.user_metadata || {}).display_name || "") };
+    try {
+      const { data, error } = await db().from("profiles").select("id, display_name").eq("id", user.id).maybeSingle();
+      if (error || !data) return fallback;
+      return data;
+    } catch (e) { return fallback; }
+  }
+
+  async function updateDisplayName(userId, displayName) {
+    const name = cleanName(displayName).slice(0, NAME_MAX);
+    await call(() => db().from("profiles").update({ display_name: name }).eq("id", userId).select("id"));
+    return name;
+  }
+
+  function onChange(callback) {
+    if (!isEnabled()) return () => {};
+    const { data } = db().auth.onAuthStateChange((event, session) => {
+      // عدم استدعاء Supabase من داخل هذا المستمع مباشرة (توصية المكتبة)
+      setTimeout(() => callback(event, session), 0);
+    });
+    return () => data.subscription.unsubscribe();
   }
 
   return {
-    signUpSchoolStudent,
-    signUpExternalStudent,
-    signInWithUsername,
-    signOut,
-    getSession,
-    getCurrentProfile,
-    getAccessStatus,
-    getTrialDaysRemaining,
-    needsPasswordChange,
-    changePassword,
-    listMyDevices,
-    retireDevice,
-    logEvent,
+    isEnabled, AuthError, MESSAGES,
+    validateEmail, validatePassword, validateName, cooldownRemaining,
+    signUp, signIn, resendConfirmation, requestPasswordReset, updatePassword, signOut,
+    getSession, verifyUser, verifyTokenHash, getProfile, updateDisplayName, onChange,
   };
 })();

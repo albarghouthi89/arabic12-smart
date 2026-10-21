@@ -1,50 +1,92 @@
 /* ==========================================================================
-   platform.css — إضافات طبقة الحسابات/التجربة المجانية/الاشتراك فقط.
-   لا يُعدَّل هنا أي قاعدة من style.css الأصلي — ملف مستقل بالكامل، ويستخدم
-   نفس متغيرات التصميم (--primary, --surface, ...) للحفاظ على نفس الهوية
-   البصرية. تمّت مواءمة القيم هنا مع نظام تصميم «تَمَكُّن» للاتساق، رغم أنّ
-   هذه الطبقة كاملةً مُعطَّلة في هذه النسخة المجانية عبر
-   PLATFORM_CONFIG.ENABLE_COMMERCIAL_LAYER = false (راجع js/platform/config.js
-   و js/platform/supabase-client.js) — لا يظهر أي شيء من هذا الملف للطالب.
+   platform.css — واجهة الحساب (دخول/إنشاء حساب/تفعيل/استعادة/حسابي).
+   ملف مستقل لا يعدّل أي قاعدة في style.css، ويستخدم متغيرات التصميم نفسها
+   (--primary, --surface, ...) للحفاظ على هوية «تمكّن». لا يظهر شيء منه ما لم
+   تُعدّ الحسابات في js/platform/config.js.
    ========================================================================== */
 
-.auth-screen { max-width: 420px; margin: 24px auto; }
+:root { --auth-ok: #1f7a4d; --auth-ok-light: #e7f5ee; }
 
-.auth-tabs {
-  display: flex; flex-wrap: wrap; gap: 8px; margin-bottom: 14px;
+/* رابط الحساب في اللوحة الرئيسية — هادئ، لا نافذة منبثقة */
+.tk-account-link {
+  display: inline-flex; align-items: center; gap: 8px; align-self: flex-start;
+  min-height: 40px; padding: 0 16px; margin: 0 0 12px;
+  border-radius: var(--radius-pill); border: 1px solid var(--border);
+  background: var(--surface); color: var(--text); box-shadow: var(--shadow);
+  font: inherit; font-size: 0.88rem; font-weight: 800; cursor: pointer;
+  transition: border-color .15s ease, background .15s ease, color .15s ease;
 }
-.auth-tabs button { flex: 1; min-width: 110px; font-size: 0.82rem; padding: 8px 6px; }
-.auth-tabs button.active {
-  background: var(--primary); color: #fff; border-color: var(--primary);
-}
+.tk-account-link:hover { border-color: #bfbaf7; background: var(--primary-light); color: var(--primary-dark); }
+.tk-account-link:focus-visible { outline: 3px solid var(--primary); outline-offset: 2px; }
+.tk-account-ico { font-size: 1rem; line-height: 1; }
 
-.auth-field {
-  display: block; margin-bottom: 12px; font-size: 0.85rem; color: var(--text-muted);
-}
-.auth-field span { display: block; margin-bottom: 4px; }
+/* الشاشات */
+.auth-screen { max-width: 440px; margin: 20px auto; }
+.auth-card { padding: 22px 20px; }
+.auth-title { margin: 0 0 6px; font-size: 1.25rem; }
+.auth-sub { margin: 0 0 16px; color: var(--text-muted); font-size: 0.9rem; }
+.auth-form { display: block; }
+
+.auth-field { margin-bottom: 14px; }
+.auth-field label { display: block; margin-bottom: 6px; font-size: 0.88rem; font-weight: 700; color: var(--text); }
 .auth-field input {
-  width: 100%; padding: 10px 12px; border-radius: var(--radius-sm);
-  border: 1px solid var(--border); font-family: inherit; font-size: 0.95rem;
+  width: 100%; box-sizing: border-box; min-height: 46px; padding: 10px 12px;
+  border-radius: var(--radius-sm); border: 1px solid var(--border);
   background: var(--surface); color: var(--text);
+  font-family: inherit; font-size: 1rem; /* 16px يمنع تكبير iOS عند التركيز */
 }
-.auth-field input:focus { outline: 2px solid var(--primary); outline-offset: 1px; }
+.auth-field input[dir="ltr"] { text-align: left; }
+.auth-field input:focus { outline: 2px solid var(--primary); outline-offset: 1px; border-color: var(--primary); }
+.auth-hint { display: block; margin-top: 5px; color: var(--text-muted); font-size: 0.8rem; }
 
-.auth-error { color: var(--red); font-size: 0.85rem; min-height: 1.1em; }
+.auth-pw-wrap { position: relative; }
+.auth-pw-wrap input { padding-inline-end: 72px; }
+.auth-pw-toggle {
+  position: absolute; inset-inline-end: 6px; top: 50%; transform: translateY(-50%);
+  min-height: 34px; padding: 0 10px; border: 0; border-radius: var(--radius-sm);
+  background: var(--primary-light); color: var(--primary-dark);
+  font: inherit; font-size: 0.8rem; font-weight: 700; cursor: pointer;
+}
 
-/* شريط حالة التجربة/الاشتراك على لوحة التحكم — هادئ، بلا نوافذ منبثقة */
-.trial-banner { background: linear-gradient(135deg, var(--primary), var(--primary-dark)); }
-.trial-banner-expired { background: linear-gradient(135deg, var(--amber), var(--amber-dark)); }
+.auth-submit { width: 100%; min-height: 46px; margin-top: 4px; }
+.auth-submit.is-busy, .auth-resend.is-busy, .auth-signout.is-busy { opacity: .75; cursor: progress; }
+.auth-submit.is-busy::before, .auth-resend.is-busy::before, .auth-signout.is-busy::before {
+  content: ""; display: inline-block; width: 14px; height: 14px; margin-inline-end: 8px; vertical-align: -2px;
+  border: 2px solid currentColor; border-top-color: transparent; border-radius: 50%;
+  animation: auth-spin .8s linear infinite;
+}
+@keyframes auth-spin { to { transform: rotate(360deg); } }
+@media (prefers-reduced-motion: reduce) { .auth-submit.is-busy::before, .auth-resend.is-busy::before, .auth-signout.is-busy::before { animation: none; } }
 
-.platform-chip-row { margin-bottom: 10px; }
-.platform-chip { background: var(--primary-light); color: var(--primary-dark); }
+.auth-msg { min-height: 1.2em; margin: 4px 0 12px; font-size: 0.88rem; line-height: 1.6; }
+.auth-msg:empty { margin: 0; min-height: 0; }
+.auth-msg-error { padding: 10px 12px; border-radius: var(--radius-sm); background: var(--red-light); color: var(--red); }
+.auth-msg-ok { padding: 10px 12px; border-radius: var(--radius-sm); background: var(--auth-ok-light); color: var(--auth-ok); }
 
-.account-link { margin-top: 6px; }
+.auth-links { display: flex; flex-wrap: wrap; justify-content: space-between; gap: 8px 16px; margin-top: 14px; }
+.auth-link {
+  min-height: 40px; padding: 0 2px; border: 0; background: none; cursor: pointer;
+  color: var(--primary); font: inherit; font-size: 0.88rem; font-weight: 700; text-decoration: underline; text-underline-offset: 3px;
+}
+.auth-link:focus-visible { outline: 2px solid var(--primary); outline-offset: 2px; border-radius: 4px; }
 
-.account-card, .account-status-card { margin-bottom: 12px; }
-.account-status-line { font-weight: 700; font-size: 1.02rem; margin: 4px 0 8px; }
-.price-line { font-weight: 600; }
+.auth-email { font-weight: 800; word-break: break-all; text-align: center; margin: 4px 0 12px; }
+.auth-steps { margin: 0 0 16px; padding-inline-start: 20px; color: var(--text-muted); font-size: 0.9rem; line-height: 1.8; }
+.auth-resend { width: 100%; min-height: 44px; margin-bottom: 8px; }
+.auth-aside { margin-top: 18px; padding-top: 14px; border-top: 1px solid var(--border-soft); font-size: 0.88rem; color: var(--text-muted); }
+
+.auth-facts { display: grid; grid-template-columns: auto 1fr; gap: 8px 14px; margin: 12px 0 16px; font-size: 0.92rem; }
+.auth-facts dt { color: var(--text-muted); }
+.auth-facts dd { margin: 0; font-weight: 700; word-break: break-all; }
+.auth-facts dd[dir="ltr"] { text-align: right; }
+.auth-section { margin-bottom: 10px; border: 1px solid var(--border); border-radius: var(--radius-sm); padding: 0 12px; }
+.auth-section summary { min-height: 44px; display: flex; align-items: center; cursor: pointer; font-weight: 700; }
+.auth-section[open] { padding-bottom: 12px; }
+.auth-signout { width: 100%; min-height: 44px; margin-top: 6px; }
+.auth-note { margin: 12px 0 0; color: var(--text-muted); font-size: 0.82rem; }
 
 @media (max-width: 480px) {
-  .auth-screen { margin: 12px 8px; }
-  .auth-tabs button { min-width: 90px; }
+  .auth-screen { margin: 12px 0; }
+  .auth-card { padding: 18px 14px; }
+  .auth-links { flex-direction: column; align-items: flex-start; gap: 2px; }
 }
