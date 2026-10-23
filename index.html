@@ -114,20 +114,17 @@
   <main id="app-main" class="protect-content" role="main" aria-live="polite"></main>
   <div id="content-watermark-layer" aria-hidden="true"></div>
 
-  <!-- ==================== طبقة الحسابات الحقيقية (إضافة جديدة — المرحلة الثانية) ====================
-       تُحمَّل أولًا وقبل كل شيء آخر لأن app.js في نهاية الصفحة يتحقق من
-       window.PlatformBoot عند الإقلاع. مكتبة supabase-js من CDN عامة وموثوقة
-       (jsdelivr)؛ إن تعذّر تحميلها (لا إنترنت) يبقى window.PLATFORM_DB = null
-       وتستمر كل الملفات أدناه بالعمل بوضعها المحلي الأصلي دون أي تغيير.
-       config.js يحتوي فقط على Project URL + Anon/Publishable Key — قيمتان
-       آمنتان تمامًا للنشر العلني (راجع التعليق داخل الملف). لا يوجد ولن
-       يوضع أبدًا أي مفتاح service_role في أي ملف يصل إليه المتصفح.
+  <!-- ==================== طبقة الحسابات (Supabase Auth — البريد الإلكتروني، مجانية) ====================
+       تُحمَّل قبل app.js لأنه يستدعي window.PlatformBoot عند الإقلاع. الحساب اختياري
+       ولا يحجب أي محتوى. supabase-js بإصدار مثبَّت وبصمة SRI؛ إن تعذّر تحميلها (لا
+       إنترنت) يبقى window.PLATFORM_DB = null وتعمل المنصة كما هي بلا حسابات.
+       config.js يحتوي فقط على Project URL + Publishable Key (آمنتان للنشر العلني).
+       ملفا access.js و progress-sync.js (الطبقة التجارية القديمة) لا يُحمَّلان.
   =============================================================================================== -->
-  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.49.4/dist/umd/supabase.js" integrity="sha384-rwykjmWNwVxboyFmvK9OXN0wj9hnMHA2aAHtits54DuACyCq0M2PrSNxhRb+hvXT" crossorigin="anonymous"></script>
   <script src="js/platform/config.js"></script>
   <script src="js/platform/supabase-client.js"></script>
   <script src="js/platform/auth.js"></script>
-  <script src="js/platform/access.js"></script>
 
   <!-- ==================== ترتيب تحميل السكربتات مهم ====================
        1) data-core.js يهيّئ ARABIC12_DATA فارغة
@@ -150,22 +147,16 @@
   <script src="js/lessons/13-shart-ghayr-jazima.js"></script>
   <script src="js/progress.js"></script>
 
-  <!-- مزامنة التقدّم المحلي مع قاعدة البيانات الحقيقية (إضافة جديدة — المرحلة
-       الثانية) — تُغلِّف دوال Progress دون تعديل js/progress.js نفسه إطلاقًا.
-       يجب أن تُحمَّل بعد js/progress.js مباشرة. -->
-  <script src="js/platform/progress-sync.js"></script>
-
   <script src="js/quiz.js"></script>
   <script src="js/mindmap.js"></script>
 
   <!-- ==================== بنك الأسئلة التجريبية والوزارية (إضافة جديدة) ====================
        يُحمَّل بعد كل المحركات الحالية وقبل app.js حتى يستطيع app.js تسجيل
        مسارات بنك الأسئلة الجديدة في VIEWS دون أي تعديل في بقية الملفات أعلاه.
-       questions-bank-data-raw.js اختياري (للتتبع والتدقيق فقط)؛ لا شيء في
-       الواجهة يعتمد عليه بشكل أساسي.
+       questions-bank-data-raw.js (للتتبع والتدقيق فقط) لا يُحمَّل في الصفحة: لا شيء
+       في الواجهة يقرؤه، ويبقى في المستودع مرجعًا للمصدر الخام.
   ======================================================================================= -->
   <script src="js/questions-bank-data.js"></script>
-  <script src="js/questions-bank-data-raw.js"></script>
   <script src="js/questions-bank.js"></script>
   <script src="js/questions-bank-ui.js"></script>
 
@@ -198,11 +189,11 @@
   <script src="js/answer-audit.js"></script>
   <script src="js/answer-audit-ui.js"></script>
 
-  <!-- ==================== واجهة الحساب/التجربة/الاشتراك + بوابة الدخول (إضافة جديدة — المرحلة الثانية) ====================
+  <!-- ==================== واجهة الحساب + إقلاع طبقة الحسابات ====================
        يجب أن تُحمَّل قبل app.js لأن app.js يتحقق من وجودهما فورًا عند الإقلاع
-       (لتسجيل مسار "حسابي" في VIEWS، وللمرور عبر بوابة الدخول قبل لوحة التحكم).
-       بدون Supabase مُفعَّل، كل شيء هنا خامل تمامًا ولا يظهر أي أثر له.
-  ================================================================================================================== -->
+       (لتسجيل مسار "حسابي" في VIEWS، ولرابط الحساب في اللوحة).
+       بدون Supabase مُعدّ، كل شيء هنا خامل تمامًا ولا يظهر أي أثر له.
+  ============================================================================ -->
   <script src="js/platform/platform-ui.js"></script>
   <script src="js/platform/auth-gate.js"></script>
 
