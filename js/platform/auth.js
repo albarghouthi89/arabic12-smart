@@ -35,6 +35,7 @@ const PlatformAuth = (function () {
     session_not_found: "انتهت جلستك. سجّل الدخول مجددًا.",
     reauthentication_needed: "لأسباب أمنية، سجّل الدخول مجددًا ثم أعد المحاولة.",
     otp_expired: "انتهت صلاحية الرابط أو استُخدم من قبل.",
+    email_send_failed: "تعذّر إرسال الرسالة إلى بريدك الآن. حاول بعد قليل، وإن تكرر ذلك فأبلغ المعلم.",
     network: "تعذّر الاتصال بالخدمة. تحقق من الإنترنت ثم حاول مجددًا.",
     cooldown: "انتظر قليلًا قبل طلب رسالة جديدة.",
     unknown: "حدث خطأ غير متوقع. حاول مجددًا بعد قليل.",
@@ -56,6 +57,8 @@ const PlatformAuth = (function () {
     const name = err.name || "";
     if (name === "AuthRetryableFetchError" || err.status === 0 || err instanceof TypeError) return new AuthError("network");
     if (err.code && MESSAGES[err.code]) return new AuthError(err.code);
+    // فشل خادم البريد (SMTP): Supabase يُرجع 500 «Error sending … email» ولا ينشئ الحساب
+    if (err.status === 500 && /sending .*email/i.test(err.message || "")) return new AuthError("email_send_failed");
     if (err.status === 429) return new AuthError("over_request_rate_limit");
     if (err.code === "validation_failed" || err.code === "email_address_not_authorized") return new AuthError("email_address_invalid");
     return new AuthError("unknown");
