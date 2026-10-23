@@ -20,6 +20,15 @@
 .tk-account-link:focus-visible { outline: 3px solid var(--primary); outline-offset: 2px; }
 .tk-account-ico { font-size: 1rem; line-height: 1; }
 
+/* بوابة الدخول الإلزامية: لا يظهر من رأس الصفحة إلا الشعار والاسم */
+body.tk-gated .tk-badges,
+body.tk-gated #header-extra,
+body.tk-gated #back-btn { display: none !important; }
+.auth-gate-brand { text-align: center; margin: 28px auto 0; max-width: 440px; }
+.auth-gate-name { font-size: 2.4rem; font-weight: 900; color: var(--primary); line-height: 1.2; }
+.auth-gate-tag { margin: 4px 0 0; color: var(--text-muted); font-size: 0.92rem; }
+.auth-screen.auth-gate { margin-top: 14px; }
+
 /* الشاشات */
 .auth-screen { max-width: 440px; margin: 20px auto; }
 .auth-card { padding: 22px 20px; }

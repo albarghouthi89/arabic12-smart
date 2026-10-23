@@ -3,8 +3,9 @@
 // «حسابي» بشاشاتها (دخول، إنشاء حساب، انتظار التفعيل، نسيت كلمة المرور، كلمة
 // مرور جديدة، ملف الطالب).
 //
-// الحساب اختياري: لا شيء هنا يحجب أي محتوى. المنصة مجانية بالكامل، ولا يوجد
-// أي سعر أو دفع أو اشتراك في هذه الواجهة.
+// الشاشات نفسها تعمل في وضعين: صفحة «حسابي» داخل المنصة، أو بوابة الدخول
+// الإلزامية (opts.gate) التي يعرضها auth-gate.js قبل أي محتوى. المنصة مجانية في
+// هذه المرحلة، ولا يوجد أي سعر أو دفع أو اشتراك في هذه الواجهة.
 //
 // كل نص مصدره المستخدم (الاسم، البريد) يُكتب عبر textContent فقط.
 // ============================================================================
@@ -158,8 +159,20 @@ window.PlatformUI = (function () {
 
   function viewAccount(container, opts) {
     opts = opts || {};
-    const wrap = h("div", { class: "auth-screen" });
+    const gate = !!opts.gate;
+    const wrap = h("div", { class: "auth-screen" + (gate ? " auth-gate" : "") });
     container.appendChild(wrap);
+    if (gate) {
+      container.insertBefore(h("div", { class: "auth-gate-brand" },
+        h("div", { class: "auth-gate-name", text: "تمكّن" }),
+        h("p", { class: "auth-gate-tag", text: "اللغة العربية — الثاني عشر العلمي · قطر" })), wrap);
+    }
+
+    // بعد الدخول: في البوابة يقرّر auth-gate.js فتح المنصة؛ وإلا تُعرض صفحة «حسابي».
+    async function afterSignIn(user, extra) {
+      if (gate && opts.onSignedIn && await opts.onSignedIn(user)) return;
+      show("profile", extra || {});
+    }
 
     if (!PlatformAuth.isEnabled()) {
       wrap.append(h("div", { class: "qz-card" }, h("p", { text: "الحسابات غير متاحة حاليًا. يمكنك استخدام المنصة كاملة دون حساب." })));
@@ -186,7 +199,7 @@ window.PlatformUI = (function () {
         const submit = submitButton("تسجيل الدخول");
         const form = h("form", { class: "auth-form", novalidate: true },
           h("h2", { class: "auth-title", text: "تسجيل الدخول" }),
-          h("p", { class: "auth-sub", text: "الحساب اختياري ومجاني. المنصة متاحة كاملة بدونه." }),
+          h("p", { class: "auth-sub", text: gate ? "سجّل الدخول لاستخدام المنصة. التسجيل مجاني في هذه المرحلة." : "سجّل الدخول إلى حسابك." }),
           field("البريد الإلكتروني", email),
           field("كلمة المرور", withToggle(pw)),
           msg, submit,
@@ -203,7 +216,7 @@ window.PlatformUI = (function () {
             const data = await busy(submit, "جارٍ تسجيل الدخول...", () => PlatformAuth.signIn({ email: email.value, password: pw.value }));
             pw.value = "";
             await setUser(data.user);
-            show("profile", { notice: null });
+            await afterSignIn(data.user, { notice: null });
           } catch (e) {
             if (e.code === "email_not_confirmed") { show("pending", { email: email.value.trim(), fromLogin: true }); return; }
             setMsg(msg, "error", errorText(e));
@@ -229,7 +242,7 @@ window.PlatformUI = (function () {
         const submit = submitButton("إنشاء الحساب");
         const form = h("form", { class: "auth-form", novalidate: true },
           h("h2", { class: "auth-title", text: "إنشاء حساب جديد" }),
-          h("p", { class: "auth-sub", text: "مجاني بالكامل، دون أي دفع أو بيانات بنكية." }),
+          h("p", { class: "auth-sub", text: "التسجيل مجاني في هذه المرحلة، دون أي دفع أو بيانات بنكية." }),
           field("الاسم الذي يظهر في المنصة", name),
           field("البريد الإلكتروني", email, "سنرسل إليه رسالة لتفعيل الحساب."),
           field("كلمة المرور", withToggle(pw), "8 أحرف على الأقل، حروف إنجليزية وأرقام معًا."),
@@ -248,8 +261,9 @@ window.PlatformUI = (function () {
             pw.value = ""; pw2.value = "";
             if (res.needsConfirmation) { show("pending", { email: email.value.trim() }); return; }
             // التفعيل بالبريد معطّل في الإعدادات: الجلسة جاهزة مباشرة
-            await setUser(await PlatformAuth.verifyUser());
-            show("profile", {});
+            const user = await PlatformAuth.verifyUser();
+            await setUser(user);
+            await afterSignIn(user, {});
           } catch (e) {
             setMsg(msg, "error", errorText(e));
           }
@@ -321,7 +335,7 @@ window.PlatformUI = (function () {
             await busy(submit, "جارٍ الحفظ...", () => PlatformAuth.updatePassword(pw.value));
             pw.value = ""; pw2.value = "";
             state.recovery = false;
-            show("profile", { notice: "password_updated" });
+            await afterSignIn(state.user, { notice: "password_updated" });
           } catch (e) {
             setMsg(msg, "error", errorText(e));
           }
@@ -372,6 +386,8 @@ window.PlatformUI = (function () {
         outBtn.addEventListener("click", async () => {
           await busy(outBtn, "جارٍ تسجيل الخروج...", () => PlatformAuth.signOut());
           await setUser(null);
+          // الدخول إلزامي: العودة إلى شاشة الدخول مباشرة دون رسم المنصة لحظة
+          if (window.PLATFORM_CONFIG && window.PLATFORM_CONFIG.REQUIRE_ACCOUNT === true) { location.replace(location.pathname); return; }
           if (window.AppShell) window.AppShell.goRoot("dashboard", "تمكّن");
         });
 
@@ -381,7 +397,7 @@ window.PlatformUI = (function () {
           h("dl", { class: "auth-facts" },
             h("dt", { text: "البريد الإلكتروني" }), h("dd", { dir: "ltr", text: state.user.email || "" }),
             h("dt", { text: "حالة الحساب" }), h("dd", { text: verified ? "✓ مفعّل" : "غير مفعّل" }),
-            h("dt", { text: "الاشتراك" }), h("dd", { text: "المنصة مجانية بالكامل" })),
+            h("dt", { text: "الاشتراك" }), h("dd", { text: "مجاني في هذه المرحلة" })),
           h("details", { class: "auth-section" }, h("summary", { text: "تعديل الاسم" }), nameForm),
           h("details", { class: "auth-section" }, h("summary", { text: "تغيير كلمة المرور" }), pwForm),
           outBtn, outMsg,
@@ -390,8 +406,8 @@ window.PlatformUI = (function () {
     };
 
     if (state.recovery && state.user) show("newPassword", {});
-    else if (state.user) show("profile", { notice: opts.notice });
-    else show(opts.screen || "login", { notice: opts.notice, offerResend: opts.notice === "link_expired" || opts.notice === "link_invalid" });
+    else if (state.user && !gate) show("profile", { notice: opts.notice });
+    else show(opts.screen || "login", { notice: opts.notice, offerResend: opts.offerResend || opts.notice === "link_expired" || opts.notice === "link_invalid" });
   }
 
   return { state, setUser, renderStatusBanner, renderAccountLink, refreshAccountLink, viewAccount };

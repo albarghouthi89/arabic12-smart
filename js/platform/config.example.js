@@ -9,6 +9,7 @@
 // ============================================================================
 window.PLATFORM_CONFIG = {
   ENABLE_ACCOUNTS: true,
+  REQUIRE_ACCOUNT: true,
   ENABLE_COMMERCIAL_LAYER: false,
   SUPABASE_URL: "https://YOUR-PROJECT-REF.supabase.co",
   SUPABASE_ANON_KEY: "YOUR-PUBLISHABLE-KEY",
