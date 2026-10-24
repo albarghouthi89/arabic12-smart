@@ -163,9 +163,16 @@ window.PlatformUI = (function () {
     const wrap = h("div", { class: "auth-screen" + (gate ? " auth-gate" : "") });
     container.appendChild(wrap);
     if (gate) {
-      container.insertBefore(h("div", { class: "auth-gate-brand" },
+      const brand = h("div", { class: "auth-gate-brand" },
         h("div", { class: "auth-gate-name", text: "تمكّن" }),
-        h("p", { class: "auth-gate-tag", text: "اللغة العربية — الثاني عشر العلمي · قطر" })), wrap);
+        h("p", { class: "auth-gate-tag", text: "اللغة العربية — الثاني عشر العلمي · قطر" }));
+      // العودة إلى الصفحة التعريفية (landing.js) حين فُتحت الشاشة منها
+      if (typeof opts.onBack === "function") {
+        const back = h("button", { type: "button", class: "auth-gate-back", text: "→ العودة إلى الصفحة الرئيسية" });
+        back.addEventListener("click", opts.onBack);
+        brand.appendChild(back);
+      }
+      container.insertBefore(brand, wrap);
     }
 
     // بعد الدخول: في البوابة يقرّر auth-gate.js فتح المنصة؛ وإلا تُعرض صفحة «حسابي».
