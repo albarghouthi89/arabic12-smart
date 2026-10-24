@@ -51,22 +51,41 @@ window.PlatformBoot = (function () {
     try { history.replaceState(null, "", location.pathname); } catch (e) { /* ignore */ }
   }
 
+  // الصفحة التعريفية للزائر (landing.js): أول ما يراه من لم يسجّل الدخول.
+  // لا تعرض أي محتوى تعليمي؛ أزرارها تفتح شاشتي الحساب الموجودتين.
+  function showLanding(onAllowed) {
+    if (typeof PlatformLanding === "undefined") { showGate(onAllowed, null); return; }
+    document.body.classList.add("tk-gated", "tk-landing");
+    const main = document.getElementById("app-main");
+    main.textContent = "";
+    PlatformLanding.render(main, {
+      onSignup: () => showGate(onAllowed, null, "signup", true),
+      onLogin: () => showGate(onAllowed, null, "login", true),
+    });
+    window.scrollTo(0, 0);
+  }
+
   // شاشة الدخول الإلزامية: تملأ الصفحة وحدها، ولا يُرسم شيء من المنصة خلفها.
-  function showGate(onAllowed, notice) {
+  // fromLanding: فُتحت من الصفحة التعريفية، فيظهر زر العودة إليها.
+  function showGate(onAllowed, notice, screen, fromLanding) {
+    document.body.classList.remove("tk-landing");
     document.body.classList.add("tk-gated");
     const main = document.getElementById("app-main");
     const title = document.getElementById("header-title");
     if (title) title.textContent = "تمكّن";
     main.textContent = "";
+    window.scrollTo(0, 0);
     PlatformUI.viewAccount(main, {
       gate: true,
       notice,
+      screen,
+      onBack: fromLanding ? () => showLanding(onAllowed) : undefined,
       offerResend: notice === "link_expired" || notice === "link_invalid",
       onSignedIn: async (user) => {
         const fresh = (await PlatformAuth.verifyUser()) || user;
         if (!contentAllowed(fresh)) return false; // يبقى على شاشة الحساب
         PlatformUI.state.user = fresh;
-        document.body.classList.remove("tk-gated");
+        document.body.classList.remove("tk-gated", "tk-landing");
         contentShown = true;
         onAllowed();
         return true;
@@ -145,7 +164,10 @@ window.PlatformBoot = (function () {
       }
       const user = PlatformUI.state.user;
       if (PlatformUI.state.recovery || !contentAllowed(user)) {
-        showGate(onReady, notice);
+        // زائر بلا رابط بريد ولا حساب: الصفحة التعريفية. غير ذلك (نتيجة رابط
+        // تفعيل/استعادة، أو حساب لم يُفعَّل بعد): شاشة الحساب مباشرة.
+        if (!notice && !PlatformUI.state.recovery && !user) showLanding(onReady);
+        else showGate(onReady, notice);
         return;
       }
       contentShown = true;
